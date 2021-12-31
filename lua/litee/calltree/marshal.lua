@@ -1,4 +1,4 @@
-local config = require('litee.symboltree.config').config
+local config = require('litee.calltree.config').config
 local lib_icons = require('litee.lib.icons')
 local lib_util = require('litee.lib.util')
 

@@ -1,0 +1,221 @@
+*litee-calltree.nvim* litee-calltree.nvim
+
+Author:   Louis DeLosSantos <louis.delos@gmail.com>
+Homepage: <https://github.com/ldelossa/litee-calltree.nvim>
+License:  MIT license
+
+██╗     ██╗████████╗███████╗███████╗   ███╗   ██╗██╗   ██╗██╗███╗   ███╗
+██║     ██║╚══██╔══╝██╔════╝██╔════╝   ████╗  ██║██║   ██║██║████╗ ████║ Lightweight
+██║     ██║   ██║   █████╗  █████╗     ██╔██╗ ██║██║   ██║██║██╔████╔██║ Integrated
+██║     ██║   ██║   ██╔══╝  ██╔══╝     ██║╚██╗██║╚██╗ ██╔╝██║██║╚██╔╝██║ Text
+███████╗██║   ██║   ███████╗███████╗██╗██║ ╚████║ ╚████╔╝ ██║██║ ╚═╝ ██║ Editing
+╚══════╝╚═╝   ╚═╝   ╚══════╝╚══════╝╚═╝╚═╝  ╚═══╝  ╚═══╝  ╚═╝╚═╝     ╚═╝ Environment
+====================================================================================
+CONTENTS                                                         *litee-contents*
+
+  1     Intro.........................................|litee-calltree-intro|
+  2     Usage.........................................|litee-calltree-usage|
+  2.1    Unified Panel................................|litee-calltree-unified-panel|  
+  3     Commands......................................|litee-calltree-commands|
+  4     Mappings......................................|litee-calltree-mappings|
+  5     Config........................................|litee-calltree-config|
+  6     Highlights....................................|litee-calltree-highlights|
+
+====================================================================================
+INTRODUCTION                                                  *litee-calltree-intro*
+
+litee-calltree utilizes the litee.nvim (https://github.com/ldelossa/litee.nvim) library 
+to implement a tool analogous to VSCode's "Call Hierarchy" tool. 
+
+This tool exposes an explorable tree of incoming or outgoing calls for a given symbol.
+
+Unlike other Neovim plugins, the tree can be expanded and collapsed to discover 
+"callers-of-callers" and "callees-of-callees" until you hit a leaf.
+
+Like all `litee.nvim` backed plugins the UI will work with other `litee.nvim` plugins, 
+keeping its appropriate place in a collapsible panel.
+
+====================================================================================
+Usage                                                         *litee-calltree-usage*
+
+First ensure you also have the litee.nvim (https://github.com/ldelossa/litee.nvim) 
+library installed.
+
+litee-calltree.nvim hooks directly into the LSP infrastructure by hijacking the necessary
+handlers like so:
+
+    vim.lsp.handlers['callHierarchy/incomingCalls'] = vim.lsp.with(
+                require('litee.lsp.handlers').ch_lsp_handler("from"), {}
+    )
+    vim.lsp.handlers['callHierarchy/outgoingCalls'] = vim.lsp.with(
+                require('litee.lsp.handlers').ch_lsp_handler("to"), {}
+    )
+
+This occurs when `require('litee.calltree').setup()` is called.
+
+Once the handlers are in place issuing the normal "vim.lsp.buf.incoming_calls" and 
+"vim.lsp.buf.outgoing_calls" functions will open the appropriate UI.
+
+Mapping the aformentioned lsp functions to key bindings is adviced and will 
+pop open the `Calltree` UI when invoked.
+
+                                                            *litee-calltree-panel*
+
+`litee-calltree` utilizes the `litee.nvim` libray to integrate itself within
+the panel `litee.nvim` exposes.
+
+This means the calltree UI will share its portion of the panel with other
+`litee.nvim` backed plugin creating a unified panel experience similar to
+IDEs such as JetBrains and VSCode.
+
+The panel is defined and implemented in the `litee.nvim` module and configured
+on its own, this doc will cover some panel basics in the `litee-calltree-commands`
+and `litee-calltree-config` sections.
+
+From there check out `litee-commands` to manipulate the UI.
+
+====================================================================================
+COMMANDS                                                   *litee-calltree-commands*
+
+The `litee.nvim` library proper exports the panel which all `litee.nvim` backed
+plugins which display themselves should utilize.
+
+To toggle the panel open and close use the following command 
+(exported on `require('litee.lib').setup()`)
+
+    -- Toggle the litee.nvim panel open or close.
+    -- When toggled the relative window sizes are reset but the major 
+    -- size (width for left/right, height for top/bottom) are remembered.
+    vim.cmd("command! LTPanel       lua require('litee.ui').toggle_panel()")
+
+    -- Can be used to toggle the panel open and jump directly to the Calltree 
+    -- panel component. Only valid if a Calltree is open and "LTCloseCalltree" has
+    -- not been called on the current tab.
+    vim.cmd("command! LTOpenToCalltree      lua require('litee.calltree').open_to()")
+    -- When called on a specific tabpage any Calltree UI will be closed and cleared
+    -- from the panel. Toggling the panel will not open the most recent Calltree.
+    vim.cmd("command! LTCloseCalltree       lua require('litee.calltree').close_calltree()")
+    -- Similar to "LTCloseCalltree" but only hides the Calltree UI from the panel. 
+    -- Toggling the panel will open the most recent Calltree once again.
+    vim.cmd("command! LTHideCalltree        lua require('litee.calltree').hide_calltree()")
+    -- Progress the cursor in the Calltree UI forward
+    vim.cmd("command! LTNextCalltree        lua require('litee.calltree').navigation('n')")
+    -- Progress the cursor in the Calltree UI backwards
+    vim.cmd("command! LTPrevCalltree        lua require('litee.calltree').navigation('p')")
+    -- Expand the Calltree node under the cursor
+    vim.cmd("command! LTExpandCalltree      lua require('litee.calltree').expand_calltree()")
+    -- Collapse the Calltree node under the cursor
+    vim.cmd("command! LTCollapseCalltree    lua require('litee.calltree').collapse_calltree()")
+    -- Collapse all Calltree nodes up to the root.
+    vim.cmd("command! LTCollapseAllCalltree lua require('litee.calltree').collapse_all_calltree()")
+    -- Make the Calltree node under the cursor the new root of the Calltree. 
+    vim.cmd("command! LTFocusCalltree       lua require('litee.calltree').focus_calltree()")
+    -- Make the Calltree node under the cursor the new root of the Calltree and
+    -- switch the direction from incoming to outgoing or vice versa.
+    vim.cmd("command! LTSwitchCalltree      lua require('litee.calltree').switch_calltree()")
+    -- Jump to the source code buffer and line for the symbol under the cursor.
+    vim.cmd("command! LTJumpCalltree        lua require('litee.calltree').jump_calltree()")
+    -- Same as "LTJumpCalltree" but use a split.
+    vim.cmd("command! LTJumpCalltreeSplit   lua require('litee.calltree').jump_calltree('split')")
+    -- Same as "LTJumpCalltree" but use a vsplit.
+    vim.cmd("command! LTJumpCalltreeVSplit  lua require('litee.calltree').jump_calltree('vsplit')")
+    -- Same as "LTJumpCalltree" but use a new tab.
+    vim.cmd("command! LTJumpCalltreeTab     lua require('litee.calltree').jump_calltree('tab')")
+    -- Show LSP hover details for the Calltree node under the cursor.
+    vim.cmd("command! LTHoverCalltree       lua require('litee.calltree').hover_calltree()")
+    -- Show node details for the Calltree node under the cursor.
+    vim.cmd("command! LTDetailsCalltree     lua require('litee.calltree').details_calltree()")
+
+====================================================================================
+MAPPINGS                                                   *litee-calltree-mappings*
+
+litee-calltree.nvim creates its own buffers for usage and creates buffer local key maps
+for these windows. 
+
+The following key maps are defined and can be reviewed anytime by pressing "?" in
+a litee-calltree.nvim window.
+
+    vim.api.nvim_buf_set_keymap(buf, "n", "zo", ":LTExpandCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "zc", ":LTCollapseCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "zM", ":LTCollapseAllCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "<CR>", ":LTJumpCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "s", ":LTJumpCalltreeSplit<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "v", ":LTJumpCalltreeVSplit<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "t", ":LTJumpCalltreeTab<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "f", ":LTFocusCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "i", ":LTHoverCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "d", ":LTDetailsCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "S", ":LTSwitchCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "H", ":LTHideCalltree<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "X", ":LTCloseCalltree<CR>", opts)
+
+====================================================================================
+CONFIG                                                       *litee-calltree-config*
+
+`litee-calltree.nvim` is dependent on the `litee.nvim` library and will not
+export any commands unless this depedency is present. 
+
+Ensure the `litee.lib` can be correctly imported for `litee-calltree.nvim` to
+work correctly.
+
+The config table is described below:
+
+    M.config = {
+        -- When retrieving Call Hierarchy items some language servers will respond with
+        -- different symbol names then when a document symbol or workspace symbol request
+        -- is made. 
+        --
+        -- To unify the experience `litee-calltree.nvim` can collect symbol details for
+        -- each Call Hierarhcy item, providing a more accurate display of symbol details
+        -- in the Calltree UI window.
+        --
+        -- This takes a little longer, but is also async, and will not block Neovim.
+        resolve_symbols = true,
+        -- the jump_mode used for jumping from
+        -- calltree node to source code line. 
+        -- "invoking" will use the last window that invoked the calltree (feels natural)
+        -- "neighbor" will use the closest neighbor opposite to the panel orientation 
+        -- (if panel is left, uses window to the right.)
+        jump_mode = "invoking",
+        -- enables hiding the cursor inside the Calltree UI.
+        hide_cursor = true,
+        -- sets a scrolloff when inside the Calltree UI so contents
+        -- are always centered.
+        scrolloff = true,
+        -- Maps arrow keys to resizing the Calltree UI within the `litee.nvim` Panel.
+        map_resize_keys = true,
+        -- Disables all highlighting.
+        no_hls = false,
+    }
+
+Any overrides to this table can be supplied in the setup function:
+    `require('litee.calltree').setup({no_hls = true})`
+
+The above is an example of turning off all highlights but leaving all
+other values their default.
+
+To customize the panel orientation, notifications, etc... you should
+configure `litee.lib` to your liking. For example:
+
+    require('litee.lib').setup({
+        tree = {
+            icon_set = "codicons"
+        },
+        panel = {
+            orientation = "left",
+            panel_size  = 30
+        }
+    })
+
+See (:h litee-config) for full details on configuring the litee.nvim library.
+
+For an example configuration with suggested keymaps refer to my dotfiles:
+https://github.com/ldelossa/dotfiles/blob/master/nvim/lua/configs/litee.lua
+
+====================================================================================
+Highlights                                               *litee-calltree-highlights*
+
+All highlights used in the Calltree UI are exported by the 
+`litee.lib.highlights` module. 
+
+See (:h litee-lib-highlights) for more details.

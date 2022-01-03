@@ -12,7 +12,7 @@ function M.marshal_func(node)
     if config.icon_set ~= nil then
         icon_set = lib_icons[config.icon_set]
     end
-    local location = lib_util.resolve_location(node)
+    local location = node.location
     local name, detail, icon = "", "", ""
     -- prefer the symbol info if available
     if node.symbol ~= nil then

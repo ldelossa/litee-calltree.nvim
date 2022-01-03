@@ -68,6 +68,11 @@ M.ch_lsp_handler = function(direction)
         -- signaled this response is in ctx.params
         local root = lib_tree_node.new_node(ctx.params.item.name, keyify(ctx.params.item), 0)
         root.call_hierarchy_item = ctx.params.item
+        root.location = {
+            uri = root.call_hierarchy_item.uri,
+            range = root.call_hierarchy_item.range
+        }
+        root.references = ctx.params.item.fromRanges
 
         -- create the root's children nodes via the response array.
         local children = {}
@@ -77,6 +82,11 @@ M.ch_lsp_handler = function(direction)
              keyify(call_hierarchy_call[direction])
           )
           child.call_hierarchy_item = call_hierarchy_call[direction]
+          child.location = {
+              uri = child.call_hierarchy_item.uri,
+              range = child.call_hierarchy_item.range
+          }
+          child.references = call_hierarchy_call["fromRanges"]
           table.insert(children, child)
         end
 
@@ -135,6 +145,11 @@ function M.calltree_expand_handler(node, linenr, direction, state)
                keyify(call_hierarchy_call[direction])
             )
             child.call_hierarchy_item = call_hierarchy_call[direction]
+            child.location = {
+                uri = child.call_hierarchy_item.uri,
+                range = child.call_hierarchy_item.range
+            }
+            child.references = call_hierarchy_call["fromRanges"]
             table.insert(children, child)
         end
 
@@ -191,6 +206,11 @@ function M.calltree_switch_handler(direction, state)
                keyify(call_hierarchy_call[direction])
             )
             child.call_hierarchy_item = call_hierarchy_call[direction]
+            child.location = {
+                uri = child.call_hierarchy_item.uri,
+                range = child.call_hierarchy_item.range
+            }
+            child.references = call_hierarchy_call["fromRanges"]
             table.insert(children, child)
         end
 

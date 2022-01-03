@@ -245,7 +245,7 @@ M.jump_calltree = function(split)
         lib_notify.notify_popup_with_timeout("Must perform an call hierarchy LSP request first", 1750, "error")
         return
     end
-    local location = lib_util.resolve_location(ctx.node)
+    local location = ctx.node.location
     if location == nil or location.range.start.line == -1 then
         return
     end

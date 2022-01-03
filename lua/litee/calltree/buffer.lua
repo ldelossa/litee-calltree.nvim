@@ -42,6 +42,12 @@ function M._setup_buffer(name, buf, tab)
         vim.cmd("au WinEnter <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').set_scrolloff(true)")
     end
 
+    -- au to (re)set source code highlights when a symboltree node is hovered.
+    if config.auto_highlight then
+        vim.cmd("au BufWinLeave,WinLeave <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').auto_highlight(false)")
+        vim.cmd("au CursorHold <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').auto_highlight(true)")
+    end
+
     -- set buffer local keymaps
     local opts = {silent=true}
     vim.api.nvim_buf_set_keymap(buf, "n", "zo", ":LTExpandCalltree<CR>", opts)

@@ -1,30 +1,4 @@
-local config = require('litee').config
 local M = {}
-
-local function map_resize_keys(buffer_handle, opts)
-    local l = config.layout
-    if l == "top" or l == "bottom"  then
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Right>", ":vert resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Left>", ":vert resize -5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Up>", ":resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Down>", ":resize -5<cr>", opts)
-    elseif l == "bottom" then
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Right>", ":vert resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Left>", ":vert resize -5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Down>", ":resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Up>", ":resize -5<cr>", opts)
-    elseif l == "left" then
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Up>", ":resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Down>", ":resize -5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Left>", ":vert resize -5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Right>", ":vert resize +5<cr>", opts)
-    elseif l == "right" then
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Up>", ":resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Down>", ":resize -5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Left>", ":vert resize +5<cr>", opts)
-        vim.api.nvim_buf_set_keymap(buffer_handle, "n", "<Right>", ":vert resize -5<cr>", opts)
-    end
-end
 
 -- _setup_help_buffer performs an idempotent creation
 -- of the calltree help buffer
@@ -66,15 +40,6 @@ function M._setup_help_buffer(help_buf_handle)
             "Call Hierarchy--------------------------------------------------------------------------------------",
             "f                  - focus the tree on this symbol",
             "S                  - switch the symbol from incoming/outgoing calls",
-            "File Explorer.......................................................................................",
-            "n                  - create a new file",
-            "D                  - delete a new file or directory",
-            "d                  - create a directory",
-            "r                  - rename a file or directory",
-            "m                  - move a file or directory",
-            "p                  - copy a file or directory",
-            "s                  - select a file to perform an above action on",
-            "S                  - deselect a selected file"
         }
         vim.api.nvim_buf_set_lines(help_buf_handle, 0, #lines, false, lines)
     end
@@ -88,10 +53,11 @@ function M._setup_help_buffer(help_buf_handle)
 
     -- set buffer local keymaps
     local opts = {silent=true}
-    vim.api.nvim_buf_set_keymap(help_buf_handle, "n", "?", ":lua require('litee.ui').help(false)<CR>", opts)
-    map_resize_keys(help_buf_handle, opts)
+    vim.api.nvim_buf_set_keymap(help_buf_handle, "n", "?", ":lua require('litee.calltree').help(false)<CR>", opts)
 
     return help_buf_handle
 end
+
+M.help_buffer = M._setup_help_buffer(nil)
 
 return M

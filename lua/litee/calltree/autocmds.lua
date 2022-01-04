@@ -63,7 +63,7 @@ end
 -- this method is intended for use as an autocommand.
 --
 -- @param set (bool) Whether to remove or set highlights
--- for the symbol under the cursor in a symboltree.
+-- for the symbol under the cursor in a calltree.
 M.auto_highlight = function(set)
     local ctx = ui_req_ctx()
     if ctx.node == nil then

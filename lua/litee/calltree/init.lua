@@ -10,11 +10,12 @@ local lib_notify    = require('litee.lib.notify')
 local lib_hover     = require('litee.lib.lsp.hover')
 local lib_details   = require('litee.lib.details')
 
-local handlers      = require('litee.calltree.handlers')
-local calltree_buf  = require('litee.calltree.buffer')
-local marshal_func  = require('litee.calltree.marshal').marshal_func
-local detail_func   = require('litee.calltree.details').details_func
-local config        = require('litee.calltree.config').config
+local handlers          = require('litee.calltree.handlers')
+local calltree_buf      = require('litee.calltree.buffer')
+local calltree_help_buf = require('litee.calltree.help_buffer')
+local marshal_func      = require('litee.calltree.marshal').marshal_func
+local detail_func       = require('litee.calltree.details').details_func
+local config            = require('litee.calltree.config').config
 
 local M = {}
 
@@ -293,7 +294,7 @@ function M.on_tab_closed(tab)
     lib_tree.remove_tree(state["calltree"].tree)
 end
 
-M.hover_calltree = function()
+function M.hover_calltree()
     local ctx = ui_req_ctx()
     if
         ctx.state == nil or
@@ -316,7 +317,7 @@ M.hover_calltree = function()
     )
 end
 
-M.details_calltree = function()
+function M.details_calltree()
     local ctx = ui_req_ctx()
     if
         ctx.state == nil or
@@ -327,6 +328,23 @@ M.details_calltree = function()
         return
     end
     lib_details.details_popup(ctx.state, ctx.node, detail_func)
+end
+
+function M.help(display)
+    local ctx = ui_req_ctx()
+    if
+        ctx.state == nil or
+        ctx.cursor == nil or
+        ctx.state["calltree"].tree == nil
+    then
+        lib_notify.notify_popup_with_timeout("Must perform an call hierarchy LSP request first", 1750, "error")
+        return
+    end
+    if display then
+        vim.api.nvim_win_set_buf(ctx.state["calltree"].win, calltree_help_buf.help_buffer)
+    else
+        vim.api.nvim_win_set_buf(ctx.state["calltree"].win, ctx.state["calltree"].buf)
+    end
 end
 
 function M.dump_tree()
@@ -377,7 +395,7 @@ function M.setup(user_config)
     end
 
     if not pcall(require, "litee.lib") then
-        lib_notify.notify_popup_with_timeout("Cannot start litee-filetree without the litee.lib library.", 1750, "error")
+        lib_notify.notify_popup_with_timeout("Cannot start litee-calltree without the litee.lib library.", 1750, "error")
         return
     end
 

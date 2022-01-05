@@ -385,6 +385,8 @@ function M.setup(user_config)
         if not config.no_hls then
             lib_util_win.set_tree_highlights()
         end
+        -- set scrolloff so contents stays centered
+        vim.api.nvim_win_set_option(vim.api.nvim_get_current_win(), "scrolloff", 9999)
     end
 
     -- merge in config

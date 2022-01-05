@@ -133,7 +133,11 @@ function M.calltree_expand_handler(node, linenr, direction, state)
         if result == nil then
             -- rewrite the tree still to expand node giving ui
             -- feedback that no further callers/callees exist
-            lib_tree.write_tree_no_guide_leaf(state["calltree"].tree, state["calltree"].buf)
+            lib_tree.write_tree_no_guide_leaf(
+                state["calltree"].buf,
+                state["calltree"].tree,
+                require('litee.calltree.marshal').marshal_func
+            )
             vim.api.nvim_win_set_cursor(state["calltree"].win, linenr)
             return
         end

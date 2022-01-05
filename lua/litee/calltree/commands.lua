@@ -17,6 +17,8 @@ function M.setup()
     vim.cmd("command! LTHoverCalltree       lua require('litee.calltree').hover_calltree()")
     vim.cmd("command! LTDetailsCalltree     lua require('litee.calltree').details_calltree()")
     vim.cmd("command! LTHideCalltree        lua require('litee.calltree').hide_calltree()")
+    vim.cmd("command! LTDumpTreeCalltree    lua require('litee.calltree').dump_tree()")
+    vim.cmd("command! LTDumpNodeCalltree    lua require('litee.calltree').dump_node()")
 end
 
 return M

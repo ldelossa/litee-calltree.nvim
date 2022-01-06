@@ -92,6 +92,8 @@ To toggle the panel open and close use the following command
     -- panel component. Only valid if a Calltree is open and "LTCloseCalltree" has
     -- not been called on the current tab.
     vim.cmd("command! LTOpenToCalltree      lua require('litee.calltree').open_to()")
+    -- Uses litee.nvim's Popout feature to popout the calltree to a floating window.
+    vim.cmd("command! LTPopOutCalltree      lua require('litee.calltree').popout_to()")
     -- When called on a specific tabpage any Calltree UI will be closed and cleared
     -- from the panel. Toggling the panel will not open the most recent Calltree.
     vim.cmd("command! LTCloseCalltree       lua require('litee.calltree').close_calltree()")
@@ -186,6 +188,9 @@ The config table is described below:
         map_resize_keys = true,
         -- Disables all highlighting.
         no_hls = false,
+        -- Determines if initial creation of a calltree opens in the
+        -- Panel or in a Popout window.
+        on_open = "popout"
     }
 
 Any overrides to this table can be supplied in the setup function:

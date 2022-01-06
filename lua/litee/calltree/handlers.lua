@@ -4,7 +4,9 @@ local lib_tree          = require('litee.lib.tree')
 local lib_tree_node     = require('litee.lib.tree.node')
 local lib_lsp           = require('litee.lib.lsp')
 local lib_notify        = require('litee.lib.notify')
+
 local config            = require('litee.calltree.config').config
+local calltree_marshal  = require('litee.calltree.marshal')
 
 local M = {}
 
@@ -40,29 +42,31 @@ M.ch_lsp_handler = function(direction)
 
         local cur_win = vim.api.nvim_get_current_win()
         local cur_tabpage = vim.api.nvim_win_get_tabpage(cur_win)
+        local state_was_nil = false
 
         local state = lib_state.get_component_state(cur_tabpage, "calltree")
         if state == nil then
+            -- initial new state
+            state_was_nil = true
             state = {}
+            -- remove existing tree from memory if exists
+            if state.tree ~= nil then
+                lib_tree.remove_tree(state.tree)
+            end
+            -- create a new tree.
+            state.tree = lib_tree.new_tree("calltree")
+            -- snag the lsp clients from the buffer issuing the
+            -- call hierarchy request
+            state.active_lsp_clients = vim.lsp.get_active_clients()
+            -- store the window invoking the call tree, jumps will
+            -- occur here.
+            state.invoking_win = vim.api.nvim_get_current_win()
+            -- store what direction the call tree is being invoked
+            -- with.
+            state.direction = direction
+            -- store the tab which triggered the lsp call.
+            state.tab = cur_tabpage
         end
-
-        -- remove existing tree from memory if exists
-        if state.tree ~= nil then
-            lib_tree.remove_tree(state.tree)
-        end
-        -- snag the lsp clients from the buffer issuing the
-        -- call hierarchy request
-        state.active_lsp_clients = vim.lsp.get_active_clients()
-        -- store the window invoking the call tree, jumps will
-        -- occur here.
-        state.invoking_win = vim.api.nvim_get_current_win()
-        -- create a new tree.
-        state.tree = lib_tree.new_tree("calltree")
-        -- store what direction the call tree is being invoked
-        -- with.
-        state.direction = direction
-        -- store the tab which triggered the lsp call.
-        state.tab = cur_tabpage
 
         -- create the root of our call tree, the request which
         -- signaled this response is in ctx.params
@@ -102,12 +106,58 @@ M.ch_lsp_handler = function(direction)
         if config.resolve_symbols then
             lib_lsp.gather_symbols_async(root, children, state, function()
                 lib_tree.add_node(state.tree, root, children)
-                lib_panel.toggle_panel(global_state, false, true)
+                -- lib_panel.toggle_panel(global_state, false, true)
+                -- state was not nil, can we reuse the existing win
+                -- and buffer?
+                if
+                    not state_was_nil
+                    and state.win ~= nil
+                    and vim.api.nvim_win_is_valid(state.win)
+                    and state.buf ~= nil
+                    and vim.api.nvim_buf_is_valid(state.buf)
+                then
+                    lib_tree.write_tree(
+                        state.buf,
+                        state.tree,
+                        calltree_marshal.marshal_func
+                    )
+                else
+                    -- we have no state, so open up the panel or popout to create
+                    -- a window and buffer.
+                    if config.on_open == "popout" then
+                        lib_panel.popout_to("calltree", global_state)
+                    else 
+                        lib_panel.toggle_panel(global_state, true, false)
+                    end
+                end
             end)
             return
         end
         lib_tree.add_node(state.tree, root, children)
-        lib_panel.toggle_panel(global_state, true, false)
+
+        -- state was not nil, can we reuse the existing win
+        -- and buffer?
+        if
+            not state_was_nil
+            and state.win ~= nil
+            and vim.api.nvim_win_is_valid(state.win)
+            and state.buf ~= nil
+            and vim.api.nvim_buf_is_valid(state.buf)
+        then
+            lib_tree.write_tree(
+                state.buf,
+                state.tree,
+                calltree_marshal.marshal_func
+            )
+        else
+            -- we have no state, so open up the panel or popout to create
+            -- a window and buffer.
+            if config.on_open == "popout" then
+                lib_panel.popout_to("calltree", global_state)
+            else 
+                lib_panel.toggle_panel(global_state, true, false)
+            end
+        end
    end
 end
 

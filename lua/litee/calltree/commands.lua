@@ -2,6 +2,7 @@ local M = {}
 
 function M.setup()
     vim.cmd("command! LTOpenToCalltree      lua require('litee.calltree').open_to()")
+    vim.cmd("command! LTPopOutCalltree      lua require('litee.calltree').popout_to()")
     vim.cmd("command! LTCloseCalltree       lua require('litee.calltree').close_calltree()")
     vim.cmd("command! LTNextCalltree        lua require('litee.calltree').navigation('n')")
     vim.cmd("command! LTPrevCalltree        lua require('litee.calltree').navigation('p')")

@@ -71,4 +71,5 @@ M.auto_highlight = function(set)
     end
     lib_autohi.highlight(ctx.node, set, ctx.state["calltree"].invoking_win)
 end
+
 return M

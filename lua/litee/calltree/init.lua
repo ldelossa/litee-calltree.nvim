@@ -47,7 +47,9 @@ local function ui_req_ctx()
             vim.api.nvim_win_is_valid(state["calltree"].win) then
             cursor = vim.api.nvim_win_get_cursor(state["calltree"].win)
         end
-        node = lib_tree.marshal_line(cursor, state["calltree"].tree)
+        if cursor ~= nil then
+            node = lib_tree.marshal_line(cursor, state["calltree"].tree)
+        end
     end
 
     return {
@@ -77,10 +79,25 @@ end
 
 function M.open_to()
     local ctx = ui_req_ctx()
-    if ctx.state == nil then
+    if
+        ctx.state == nil or
+        ctx.state["calltree"] == nil
+    then
         return
     end
     lib_panel.open_to("calltree", ctx.state)
+end
+
+function M.popout_to()
+    local ctx = ui_req_ctx()
+    if
+        ctx.state == nil or
+        ctx.state["calltree"] == nil
+    then
+        lib_notify.notify_popup_with_timeout("Must perform an call hierarchy LSP request first", 1750, "error")
+        return
+    end
+    lib_panel.popout_to("calltree", ctx.state)
 end
 
 -- close_calltree will close the calltree ui in the current tab
@@ -95,12 +112,15 @@ function M.close_calltree()
             vim.api.nvim_win_close(ctx.state["calltree"].win, true)
         end
     end
-    ctx.state["calltree"].win = nil
-
+    if ctx.state["calltree"].buf ~= nil then
+        if vim.api.nvim_buf_is_valid(ctx.state["calltree"].buf) then
+            vim.api.nvim_buf_delete(ctx.state["calltree"].buf, {force = true})
+        end
+    end
     if ctx.state["calltree"].tree ~= nil then
         lib_tree.remove_tree(ctx.state["calltree"].tree)
-        ctx.state["calltree"].tree = nil
     end
+    lib_state.put_component_state(ctx.tab, "calltree", nil)
 end
 
 -- hide_calltree will remove the calltree component from

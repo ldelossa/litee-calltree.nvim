@@ -126,7 +126,7 @@ M.ch_lsp_handler = function(direction)
                     -- a window and buffer.
                     if config.on_open == "popout" then
                         lib_panel.popout_to("calltree", global_state)
-                    else 
+                    else
                         lib_panel.toggle_panel(global_state, true, false)
                     end
                 end
@@ -154,7 +154,7 @@ M.ch_lsp_handler = function(direction)
             -- a window and buffer.
             if config.on_open == "popout" then
                 lib_panel.popout_to("calltree", global_state)
-            else 
+            else
                 lib_panel.toggle_panel(global_state, true, false)
             end
         end

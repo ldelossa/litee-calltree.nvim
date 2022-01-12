@@ -53,11 +53,15 @@ handlers like so:
 
 This occurs when `require('litee.calltree').setup()` is called.
 
-Once the handlers are in place issuing the normal "vim.lsp.buf.incoming_calls" and 
-"vim.lsp.buf.outgoing_calls" functions will open the appropriate UI.
+Once `require('litee.calltree').setup()` is ran, the normal "vim.lsp.buf.incoming_calls" 
+and "vim.lsp.buf.outgoing_calls" functions will open the Calltree UI, respectively.
 
-Mapping the aformentioned lsp functions to key bindings is adviced and will 
-pop open the `Calltree` UI when invoked.
+By default the Calltree will open in a PopOut Panel, however this default is controlled by the "on_open" configuration
+flag and can be changed to open in a side panel instead. (see h: litee-calltree-config).
+
+Once the Calltree is open checkout (h: litee-symboltree-commands) to see all the available actions you can take on a Calltree.
+
+Check out the help file for full details.
 
                                                             *litee-calltree-panel*
 
@@ -151,6 +155,9 @@ a litee-calltree.nvim window.
     vim.api.nvim_buf_set_keymap(buf, "n", "H", ":LTHideCalltree<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "X", ":LTCloseCalltree<CR>", opts)
 
+    vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", ":LTClosePanelPopOut<CR>", opts)
+    vim.api.nvim_buf_set_keymap(buf, "n", "?", ":lua require('litee.calltree').help(true)<CR>", opts)
+
 ====================================================================================
 CONFIG                                                       *litee-calltree-config*
 
@@ -181,9 +188,6 @@ The config table is described below:
         jump_mode = "invoking",
         -- enables hiding the cursor inside the Calltree UI.
         hide_cursor = true,
-        -- sets a scrolloff when inside the Calltree UI so contents
-        -- are always centered.
-        scrolloff = true,
         -- Maps arrow keys to resizing the Calltree UI within the `litee.nvim` Panel.
         map_resize_keys = true,
         -- Disables all highlighting.

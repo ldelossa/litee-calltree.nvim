@@ -37,11 +37,6 @@ function M._setup_buffer(name, buf, tab)
         vim.cmd("au WinEnter <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').hide_cursor(true)")
     end
 
-    if config.scrolloff then
-        vim.cmd("au WinLeave <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').set_scrolloff(false)")
-        vim.cmd("au WinEnter <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').set_scrolloff(true)")
-    end
-
     -- au to (re)set source code highlights when a calltree node is hovered.
     if config.auto_highlight then
         vim.cmd("au BufWinLeave,WinLeave <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').auto_highlight(false)")
@@ -63,6 +58,7 @@ function M._setup_buffer(name, buf, tab)
     vim.api.nvim_buf_set_keymap(buf, "n", "S", ":LTSwitchCalltree<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "H", ":LTHideCalltree<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "X", ":LTCloseCalltree<CR>", opts)
+
     vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", ":LTClosePanelPopOut<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "?", ":lua require('litee.calltree').help(true)<CR>", opts)
 	if config.map_resize_keys then

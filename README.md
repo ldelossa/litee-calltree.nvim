@@ -37,7 +37,7 @@ Plug:
 
 Call the setup function from anywhere you configure your plugins from.
 
-Configuration dictionary is explained in ./doc/litee.txt (:h litee-config)
+Configuration dictionary is explained in ./doc/litee-calltree.txt (:h litee-calltree-config)
 
 ```
 -- configure the litee.nvim library 
@@ -47,6 +47,9 @@ require('litee.calltree').setup({})
 ```
 
 ## Use it
+
+First ensure you also have the litee.nvim (https://github.com/ldelossa/litee.nvim) 
+library installed.
 
 litee-calltree.nvim hooks directly into the LSP infrastructure by hijacking the necessary
 handlers like so:
@@ -60,10 +63,12 @@ handlers like so:
 
 This occurs when `require('litee.calltree').setup()` is called.
 
-Once the handlers are in place issuing the normal "vim.lsp.buf.incoming_calls" 
+Once `require('litee.calltree').setup()` is ran, the normal "vim.lsp.buf.incoming_calls" 
 and "vim.lsp.buf.outgoing_calls" functions will open the Calltree UI, respectively.
 
-All of LITEE.nvim can be controlled via commands making it possible to navigate
-the Calltree via key bindings. 
+By default the Calltree will open in a PopOut Panel, however this default is controlled by the "on_open" configuration
+flag and can be changed to open in a side panel instead. (see h: litee-calltree-config).
+
+Once the Calltree is open checkout (h: litee-symboltree-commands) to see all the available actions you can take on a Calltree.
 
 Check out the help file for full details.

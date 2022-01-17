@@ -52,7 +52,7 @@ function M._setup_help_buffer(help_buf_handle)
     vim.api.nvim_buf_set_option(help_buf_handle, 'swapfile', false)
 
     -- set buffer local keymaps
-    local opts = {silent=true}
+    local opts = {silent=true, noremap=true}
     vim.api.nvim_buf_set_keymap(help_buf_handle, "n", "?", ":lua require('litee.calltree').help(false)<CR>", opts)
 
     return help_buf_handle

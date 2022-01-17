@@ -44,7 +44,7 @@ function M._setup_buffer(name, buf, tab)
     end
 
     -- set buffer local keymaps
-    local opts = {silent=true}
+    local opts = {silent=true, noremap=true}
     vim.api.nvim_buf_set_keymap(buf, "n", "zo", ":LTExpandCalltree<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "zc", ":LTCollapseCalltree<CR>", opts)
     vim.api.nvim_buf_set_keymap(buf, "n", "zM", ":LTCollapseAllCalltree<CR>", opts)

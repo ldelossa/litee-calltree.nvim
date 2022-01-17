@@ -15,7 +15,7 @@ CONTENTS                                                         *litee-contents
 
   1     Intro.........................................|litee-calltree-intro|
   2     Usage.........................................|litee-calltree-usage|
-  2.1    Unified Panel................................|litee-calltree-unified-panel|  
+  2.1   Unified Panel.................................|litee-calltree-unified-panel|  
   3     Commands......................................|litee-calltree-commands|
   4     Mappings......................................|litee-calltree-mappings|
   5     Config........................................|litee-calltree-config|
@@ -63,7 +63,8 @@ Once the Calltree is open checkout (h: litee-symboltree-commands) to see all the
 
 Check out the help file for full details.
 
-                                                            *litee-calltree-panel*
+====================================================================================
+                                                      *litee-calltree-unified-panel*
 
 `litee-calltree` utilizes the `litee.nvim` libray to integrate itself within
 the panel `litee.nvim` exposes.

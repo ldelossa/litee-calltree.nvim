@@ -430,6 +430,8 @@ function M.setup(user_config)
                 require('litee.calltree.handlers').ch_lsp_handler("to"), {}
     )
 
+    vim.cmd([[au CursorHold,TextChanged,BufEnter,BufWritePost,WinEnter * lua require('litee.calltree.handlers').update_calltree_extmarks()]])
+
     require('litee.calltree.commands').setup()
 end
 

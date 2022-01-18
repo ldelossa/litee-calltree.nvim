@@ -4,6 +4,8 @@ local lib_tree          = require('litee.lib.tree')
 local lib_tree_node     = require('litee.lib.tree.node')
 local lib_lsp           = require('litee.lib.lsp')
 local lib_notify        = require('litee.lib.notify')
+local lib_util_win      = require('litee.lib.util.window')
+local lib_path          = require('litee.lib.util.path')
 
 local config            = require('litee.calltree.config').config
 local calltree_marshal  = require('litee.calltree.marshal')
@@ -287,6 +289,124 @@ function M.calltree_switch_handler(direction, state)
             state["calltree"].tree,
             require('litee.calltree.marshal').marshal_func
         )
+    end
+end
+
+local ns_id = vim.api.nvim_create_namespace("calltree-extmarks")
+
+local function _update_calltree_extmarks(node, buf)
+    if node.extmark == nil then
+        -- extmark is nil, and buffer is open, create a extmark
+        node.extmark = {
+            buf = buf,
+            id = vim.api.nvim_buf_set_extmark(
+                buf,
+                ns_id,
+                node.location.range["start"].line,
+                node.location.range["start"].character,
+                {
+                    end_row = node.location.range["end"].line,
+                    end_col = node.location.range["end"].character,
+                }
+            )
+        }
+    else
+        -- extmark exists, but node.location maybe out of date, update.
+        local extmark_linenr = vim.api.nvim_buf_get_extmark_by_id(
+            node.extmark.buf,
+            ns_id,
+            node.extmark.id,
+            {details = false}
+        )
+        if #extmark_linenr == 2 then
+            local relative_line_count = node.location.range["end"].line -
+                node.location.range["start"].line
+            local relative_char_count = node.location.range["end"].character -
+                node.location.range["start"].character
+            node.location.range["start"].line = extmark_linenr[1]
+            node.location.range["start"].character = extmark_linenr[2]
+            node.location.range["end"].line = extmark_linenr[1] + relative_line_count
+            node.location.range["end"].character = extmark_linenr[2] + relative_char_count
+        end
+    end
+
+    if node.ref_extmarks == nil and node.references ~= nil then
+        -- reference extmarks not created, create them
+        local ref_extmarks = {}
+        for _, reference in ipairs(node.references) do
+            -- extmark is nil, and buffer is open, create a extmark
+            local extmark = {
+                buf = buf,
+                id = vim.api.nvim_buf_set_extmark(
+                    buf,
+                    ns_id,
+                    reference["start"].line,
+                    reference["start"].character,
+                    {
+                        end_row = reference["end"].line,
+                        end_col = reference["end"].character,
+                    }
+                )
+            }
+            table.insert(ref_extmarks, extmark)
+        end
+        node.ref_extmarks = ref_extmarks
+    elseif node.references ~= nil then
+        for _, ref_extmark in ipairs(node.ref_extmarks) do
+            for _, reference in ipairs(node.references) do
+                -- extmark exists, but node.location maybe out of date, update.
+                local extmark_linenr = vim.api.nvim_buf_get_extmark_by_id(
+                    ref_extmark.buf,
+                    ns_id,
+                    ref_extmark.id,
+                    {details = false}
+                )
+                if #extmark_linenr == 2 then
+                    local relative_line_count = reference["end"].line -
+                        reference["start"].line
+                    local relative_char_count = reference["end"].character -
+                        reference["start"].line
+
+                    reference["start"].line = extmark_linenr[1]
+                    reference["start"].character = extmark_linenr[2]
+                    reference["end"].line = extmark_linenr[1] + relative_line_count
+                    reference["end"].character = extmark_linenr[2] + relative_char_count
+                end
+            end
+        end
+    end
+end
+
+-- update_calltree_extmarks will run thru all the nodes in
+-- the current calltree for the current tab and sync up the
+-- node's location field with their extmark (or create an extmark)
+-- if necessary.
+function M.update_calltree_extmarks()
+    local buf       = vim.api.nvim_get_current_buf()
+    local win       = vim.api.nvim_get_current_win()
+    local tab       = vim.api.nvim_win_get_tabpage(win)
+    local state     = lib_state.get_state(tab)
+    if
+        state == nil or
+        state["calltree"] == nil or
+        state["calltree"].tree == nil or
+        lib_util_win.inside_component_win()
+    then
+        return
+    end
+
+    local t = lib_tree.get_tree(state["calltree"].tree)
+    if t.root == nil or t.depth_table == nil then
+        return
+    end
+
+    local dpt_flat = lib_tree.flatten_depth_table(t.depth_table)
+
+    local name = vim.api.nvim_buf_get_name(buf)
+    for _, node in ipairs(dpt_flat) do
+        if lib_path.strip_file_prefix(node.location.uri) == name then
+            _update_calltree_extmarks(node)
+        end
     end
 end
 

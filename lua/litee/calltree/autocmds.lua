@@ -1,5 +1,5 @@
-local lib_state = require("litee.lib.state")
-local lib_tree  = require("litee.lib.tree")
+local lib_state     = require("litee.lib.state")
+local lib_tree      = require("litee.lib.tree")
 local lib_autohi    = require('litee.lib.highlights.auto')
 
 local M = {}

@@ -405,7 +405,7 @@ function M.update_calltree_extmarks()
     local name = vim.api.nvim_buf_get_name(buf)
     for _, node in ipairs(dpt_flat) do
         if lib_path.strip_file_prefix(node.location.uri) == name then
-            _update_calltree_extmarks(node)
+            _update_calltree_extmarks(node, buf)
         end
     end
 end

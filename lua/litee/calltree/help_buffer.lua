@@ -1,3 +1,5 @@
+local config = require('litee.calltree.config').config
+
 local M = {}
 
 -- _setup_help_buffer performs an idempotent creation
@@ -19,28 +21,37 @@ function M._setup_help_buffer(help_buf_handle)
             return
         end
         help_buf_handle = buf
-        local lines = {
-            "CALLTREE HELP:",
-            "press '?' to close",
-            "",
-            "KEYMAP:",
-            "Global---------------------------------------------------------------------------------------------",
-            "zo                 - expand a symbol",
-            "zc                 - collapse a symbol",
-            "zM                 - collapse all symbols",
-            "return             - jump to symbol",
-            "s                  - jump to symbol in a new split",
-            "v                  - jump to symbol in a new vsplit",
-            "t                  - jump to symbol in a new tab",
-            "d                  - show symbol details",
-            "H                  - hide this element from the panel, will appear again on toggle",
-            "x                  - remove this element from the panel, will not appear until another LSP request",
-            "Up,Down,Right,Left - resize the panel",
-            "i                  - show hover info for symbol",
-            "Call Hierarchy--------------------------------------------------------------------------------------",
-            "f                  - focus the tree on this symbol",
-            "S                  - switch the symbol from incoming/outgoing calls",
-        }
+        local lines = {}
+        if not config.disable_keymaps then
+            lines = {
+                "CALLTREE HELP:",
+                "press '?' to close",
+                "",
+                "KEYMAP:",
+                config.keymaps.expand .. " - expand a symbol",
+                config.keymaps.collapse .. " - collapse a symbol",
+                config.keymaps.collapse_all .. " - collapse all symbols",
+                config.keymaps.jump .. " - jump to a symbol in last used window",
+                config.keymaps.jump_split .. " - jump to symbol in a new split",
+                config.keymaps.jump_vsplit .. " - jump to symbol in a new vertical split",
+                config.keymaps.jump_tab .. " - jump to symbol in a new tab",
+                config.keymaps.hover .. " - show hover info for symbol",
+                config.keymaps.close .. " - close the calltree component",
+                config.keymaps.details .. " - show symbol details",
+                config.keymaps.close_panel_pop_out .. " - close the popout panel when calltree is popped out",
+                config.keymaps.help .. " - show help",
+                config.keymaps.hide .. " - hide the calltree component",
+                config.keymaps.switch .. " - focus the symbol under the cursor and switch calltree directions",
+                config.keymaps.focus .. " - focus the symbol under the cursor making it the new root of the calltree",
+            }
+        else
+            lines = {
+                "CALLTREE HELP:",
+                "press '?' to close",
+                "",
+                "No KEYMAP set:",
+            }
+        end
         vim.api.nvim_buf_set_lines(help_buf_handle, 0, #lines, false, lines)
     end
     -- set buf options

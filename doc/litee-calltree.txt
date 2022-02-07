@@ -195,7 +195,28 @@ The config table is described below:
         no_hls = false,
         -- Determines if initial creation of a calltree opens in the
         -- Panel or in a Popout window. Options are "panel" or "popout"
-        on_open = "popout"
+        on_open = "popout",
+        -- If true, disable all keymaps
+        disable_keymaps = false,
+        -- The default keymaps. Users can provide overrides
+        -- to these mappings via the setup function.
+        keymaps = {
+          expand = "zo",
+          collapse = "zc",
+          collapse_all = "zM",
+          jump = "<CR>",
+          jump_split = "s",
+          jump_vsplit = "v",
+          jump_tab = "t",
+          hover = "i",
+          details = "d",
+          close = "X",
+          close_panel_pop_out = "<Esc>",
+          help = "?",
+          hide = "H",
+          switch = "S",
+          focus = "f"
+        },
     }
 
 Any overrides to this table can be supplied in the setup function:

@@ -7,7 +7,25 @@ M.config = {
     map_resize_keys = true,
     no_hls = false,
     auto_highlight = true,
-    on_open = "popout"
+    on_open = "popout",
+    disable_keymaps = false,
+    keymaps = {
+      expand = "zo",
+      collapse = "zc",
+      collapse_all = "zM",
+      jump = "<CR>",
+      jump_split = "s",
+      jump_vsplit = "v",
+      jump_tab = "t",
+      hover = "i",
+      details = "d",
+      close = "X",
+      close_panel_pop_out = "<Esc>",
+      help = "?",
+      hide = "H",
+      switch = "S",
+      focus = "f"
+    },
 }
 
 return M

@@ -45,26 +45,28 @@ function M._setup_buffer(name, buf, tab)
 
     -- set buffer local keymaps
     local opts = {silent=true, noremap=true}
-    vim.api.nvim_buf_set_keymap(buf, "n", "zo", ":LTExpandCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "zc", ":LTCollapseCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "zM", ":LTCollapseAllCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "<CR>", ":LTJumpCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "s", ":LTJumpCalltreeSplit<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "v", ":LTJumpCalltreeVSplit<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "t", ":LTJumpCalltreeTab<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "f", ":LTFocusCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "i", ":LTHoverCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "d", ":LTDetailsCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "S", ":LTSwitchCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "H", ":LTHideCalltree<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "X", ":LTCloseCalltree<CR>", opts)
-
-    vim.api.nvim_buf_set_keymap(buf, "n", "<Esc>", ":LTClosePanelPopOut<CR>", opts)
-    vim.api.nvim_buf_set_keymap(buf, "n", "?", ":lua require('litee.calltree').help(true)<CR>", opts)
+    if not config.disable_keymaps then
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.expand, ":LTExpandCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.collapse, ":LTCollapseCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.collapse_all, ":LTCollapseAllCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump, ":LTJumpCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump_split, ":LTJumpCalltreeSplit<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump_vsplit, ":LTJumpCalltreeVSplit<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump_tab, ":LTJumpCalltreeTab<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.hover, ":LTHoverCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.details, ":LTDetailsCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.hide, ":LTHideCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.close, ":LTCloseCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.close_panel_pop_out, ":LTClosePanelPopOut<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.help, ":lua require('litee.calltree').help(true)<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.focus, ":LTFocusCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.switch, ":LTSwitchCalltree<CR>", opts)
+    end
 	if config.map_resize_keys then
            lib_util_buf.map_resize_keys(panel_config.orientation, buf, opts)
     end
     return buf
 end
+
 
 return M

@@ -179,7 +179,10 @@ end
 function M.calltree_expand_handler(node, linenr, direction, state)
     return function(err, result, _, _)
         if err ~= nil then
-            vim.api.nvim_err_writeln(vim.inspect(err))
+            -- don't log any error if the langserver does not support the request
+            if err.code and err.code ~= -32601 then
+                vim.api.nvim_err_writeln(vim.inspect(err))
+            end
             return
         end
         if result == nil then

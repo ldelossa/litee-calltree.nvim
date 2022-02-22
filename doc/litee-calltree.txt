@@ -59,7 +59,7 @@ and "vim.lsp.buf.outgoing_calls" functions will open the Calltree UI, respective
 By default the Calltree will open in a PopOut Panel, however this default is controlled by the "on_open" configuration
 flag and can be changed to open in a side panel instead. (see h: litee-calltree-config).
 
-Once the Calltree is open checkout (h: litee-symboltree-commands) to see all the available actions you can take on a Calltree.
+Once the Calltree is open checkout (h: litee-calltree-commands) to see all the available actions you can take on a Calltree.
 
 Check out the help file for full details.
 

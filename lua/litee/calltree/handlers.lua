@@ -250,6 +250,10 @@ function M.calltree_switch_handler(direction, state)
         -- signaled this response is in ctx.params
         local root = lib_tree_node.new_node(ctx.params.item.name, keyify(ctx.params.item), 0)
         root.call_hierarchy_item = ctx.params.item
+        root.location = {
+            uri = root.call_hierarchy_item.uri,
+            range = root.call_hierarchy_item.range
+        }
 
         -- try to resolve the workspace symbol for root
         root.symbol = lib_lsp.symbol_from_node(state["calltree"].active_lsp_clients, root, state["calltree"].buf)

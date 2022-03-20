@@ -85,6 +85,9 @@ function M.open_to()
     then
         return
     end
+    if not lib_util_win.is_component_win(ctx.tab, vim.api.nvim_get_current_win()) then
+        ctx.state["calltree"].invoking_win = vim.api.nvim_get_current_win()
+    end
     lib_panel.open_to("calltree", ctx.state)
 end
 
@@ -96,6 +99,9 @@ function M.popout_to()
     then
         lib_notify.notify_popup_with_timeout("Must perform an call hierarchy LSP request first", 1750, "error")
         return
+    end
+    if not lib_util_win.is_component_win(ctx.tab, vim.api.nvim_get_current_win()) then
+        ctx.state["calltree"].invoking_win = vim.api.nvim_get_current_win()
     end
     lib_panel.popout_to("calltree", ctx.state)
 end

@@ -1,5 +1,5 @@
 local config = require('litee.calltree.config').config
-local lib_icons = require('litee.lib.icons')
+local lib = require('litee.lib')
 local lib_util = require('litee.lib.util')
 
 local M = {}
@@ -8,10 +8,7 @@ local M = {}
 -- values for marshalling a calltree node into a buffer
 -- line.
 function M.marshal_func(node)
-    local icon_set = nil
-    if config.icon_set ~= nil then
-        icon_set = lib_icons[config.icon_set]
-    end
+    local icon_set = lib.icon_set_update(config.icon_set_custom, config.icon_set)
     local location = node.location
     local name, detail, icon = "", "", ""
     -- prefer the symbol info if available
@@ -19,11 +16,7 @@ function M.marshal_func(node)
         name = node.symbol.name
         local kind = vim.lsp.protocol.SymbolKind[node.symbol.kind]
         if kind ~= "" then
-            if icon_set ~= nil then
-                icon = icon_set[kind]
-            else
-                icon = "[" .. kind .. "]"
-            end
+            icon = icon_set[kind] or "[" .. kind .. "]"
         end
         local file, relative = lib_util.relative_path_from_uri(location.uri)
         if relative then
@@ -35,11 +28,7 @@ function M.marshal_func(node)
         name = node.name
         local kind = vim.lsp.protocol.SymbolKind[node.call_hierarchy_item.kind]
         if kind ~= "" then
-            if icon_set ~= nil  then
-                icon = icon_set[kind]
-            else
-                icon = "[" .. kind .. "]"
-            end
+            icon = icon_set[kind] or "[" .. kind .. "]"
         end
         local file, relative = lib_util.relative_path_from_uri(location.uri)
         if relative then

@@ -26,6 +26,8 @@ M.config = {
       switch = "S",
       focus = "f"
     },
+    icon_set = "default",
+    icon_set_custom = nil,
 }
 
 return M

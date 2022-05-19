@@ -438,6 +438,9 @@ function M.setup(user_config)
         merge_configs(user_config)
     end
 
+    -- setup icon_set: this must be non-nil
+    M.icon_set = require('litee.lib').icon_set_update(config.icon_set_custom, config.icon_set)
+
     if not pcall(require, "litee.lib") then
         lib_notify.notify_popup_with_timeout("Cannot start litee-calltree without the litee.lib library.", 1750, "error")
         return

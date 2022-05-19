@@ -1,5 +1,3 @@
-local config = require('litee.calltree.config').config
-local lib = require('litee.lib')
 local lib_util = require('litee.lib.util')
 
 local M = {}
@@ -8,7 +6,7 @@ local M = {}
 -- values for marshalling a calltree node into a buffer
 -- line.
 function M.marshal_func(node)
-    local icon_set = lib.icon_set_update(config.icon_set_custom, config.icon_set)
+    local icon_set = require('litee.calltree').icon_set
     local location = node.location
     local name, detail, icon = "", "", ""
     -- prefer the symbol info if available

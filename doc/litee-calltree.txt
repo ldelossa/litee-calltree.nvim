@@ -238,7 +238,18 @@ configure `litee.lib` to your liking. For example:
         }
     })
 
-See (:h litee-config) for full details on configuring the litee.nvim library.
+See (:h litee-usage) for full details on configuring the litee.nvim library.
+
+The custom icon_sets in separate plugins are supported, meaning this will
+override `icon_set` and `icon_set_custom` in `litee.lib`:
+>
+    require('litee.calltree').setup{
+      icon_set_custom = {Struct = "s-call"}, -- Provide icons you want.
+      -- You don't need the following line if you want a default icon_set
+      -- to be merged.
+      icon_set = "codicons",
+    }
+<
 
 For an example configuration with suggested keymaps refer to my dotfiles:
 https://github.com/ldelossa/dotfiles/blob/master/nvim/lua/configs/litee.lua
@@ -250,3 +261,5 @@ All highlights used in the Calltree UI are exported by the
 `litee.lib.highlights` module. 
 
 See (:h litee-lib-highlights) for more details.
+
+vim:ft=help

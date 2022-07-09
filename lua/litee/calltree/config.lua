@@ -24,7 +24,8 @@ M.config = {
       help = "?",
       hide = "H",
       switch = "S",
-      focus = "f"
+      focus = "f",
+      next_ref = "n"
     },
     icon_set = "default",
     icon_set_custom = nil,

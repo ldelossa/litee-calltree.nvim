@@ -28,18 +28,25 @@ local function keyify(call_hierarchy_item)
     end
 end
 
+local update_autocmd_id = nil
+
 -- ch_lsp_handler is the call heirarchy handler
 -- used in replacement to the default lsp handler.
 --
 -- this handler serves as the single entry point for creating
 -- a calltree.
 M.ch_lsp_handler = function(direction)
+    local cur_buf = vim.api.nvim_get_current_buf()
     return function(err, result, ctx, _)
         if err ~= nil then
             return
         end
         if result == nil then
             return
+        end
+
+        if update_autocmd_id ~= nil then
+            vim.api.nvim_del_autocmd(update_autocmd_id)
         end
 
         local cur_win = vim.api.nvim_get_current_win()
@@ -68,7 +75,11 @@ M.ch_lsp_handler = function(direction)
             state.direction = direction
             -- store the tab which triggered the lsp call.
             state.tab = cur_tabpage
+            -- store the invoking buffer.
+            state.invoking_buf = cur_buf
         end
+        -- swap directions so highlighting knows what's up.
+        state.direction = direction
 
         -- create the root of our call tree, the request which
         -- signaled this response is in ctx.params
@@ -133,6 +144,14 @@ M.ch_lsp_handler = function(direction)
                     end
                 end
             end)
+                -- setup an autocmd for this buffer to keep symbols update to date.
+                update_autocmd_id = vim.api.nvim_create_autocmd(
+                    {"CursorHold","TextChanged","BufEnter","BufWritePost","WinEnter"},
+                    {
+                        buffer = cur_buf,
+                        callback = M.update_calltree_extmarks
+                    }
+                )
             return
         end
         lib_tree.add_node(state.tree, root, children)
@@ -160,6 +179,15 @@ M.ch_lsp_handler = function(direction)
                 lib_panel.toggle_panel(global_state, true, false)
             end
         end
+
+        -- setup an autocmd for this buffer to keep symbols update to date.
+        update_autocmd_id = vim.api.nvim_create_autocmd(
+            {"CursorHold","TextChanged","BufEnter","BufWritePost","WinEnter"},
+            {
+                buffer = cur_buf,
+                callback = M.update_calltree_extmarks
+            }
+        )
    end
 end
 
@@ -293,6 +321,8 @@ function M.calltree_switch_handler(direction, state)
             state["calltree"].tree,
             require('litee.calltree.marshal').marshal_func
         )
+        -- swap directions so highlighting knows what's up.
+        state.direction = direction
     end
 end
 
@@ -333,7 +363,6 @@ local function _update_calltree_extmarks(node, buf)
             node.location.range["end"].character = extmark_linenr[2] + relative_char_count
         end
     end
-
     if node.ref_extmarks == nil and node.references ~= nil then
         -- reference extmarks not created, create them
         local ref_extmarks = {}
@@ -356,26 +385,25 @@ local function _update_calltree_extmarks(node, buf)
         end
         node.ref_extmarks = ref_extmarks
     elseif node.references ~= nil then
-        for _, ref_extmark in ipairs(node.ref_extmarks) do
-            for _, reference in ipairs(node.references) do
-                -- extmark exists, but node.location maybe out of date, update.
-                local extmark_linenr = vim.api.nvim_buf_get_extmark_by_id(
-                    ref_extmark.buf,
-                    ns_id,
-                    ref_extmark.id,
-                    {details = false}
-                )
-                if #extmark_linenr == 2 then
-                    local relative_line_count = reference["end"].line -
-                        reference["start"].line
-                    local relative_char_count = reference["end"].character -
-                        reference["start"].line
+        for i, ref_extmark in ipairs(node.ref_extmarks) do
+            local reference = node.references[i]
+            -- extmark exists, but node.location maybe out of date, update.
+            local extmark_linenr = vim.api.nvim_buf_get_extmark_by_id(
+                ref_extmark.buf,
+                ns_id,
+                ref_extmark.id,
+                {details = false}
+            )
+            if #extmark_linenr == 2 then
+                local relative_line_count = reference["end"].line -
+                    reference["start"].line
+                local relative_char_count = reference["end"].character -
+                    reference["start"].line
 
-                    reference["start"].line = extmark_linenr[1]
-                    reference["start"].character = extmark_linenr[2]
-                    reference["end"].line = extmark_linenr[1] + relative_line_count
-                    reference["end"].character = extmark_linenr[2] + relative_char_count
-                end
+                reference["start"].line = extmark_linenr[1]
+                reference["start"].character = extmark_linenr[2]
+                reference["end"].line = extmark_linenr[1] + relative_line_count
+                reference["end"].character = extmark_linenr[2] + relative_char_count
             end
         end
     end

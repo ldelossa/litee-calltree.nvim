@@ -1,6 +1,7 @@
 local config = require('litee.calltree.config').config
 local panel_config = require('litee.lib.config').config["panel"]
 local lib_util_buf = require('litee.lib.util.buffer')
+local autocmds = require('litee.calltree.autocmds')
 
 local M = {}
 
@@ -39,8 +40,7 @@ function M._setup_buffer(name, buf, tab)
 
     -- au to (re)set source code highlights when a calltree node is hovered.
     if config.auto_highlight then
-        vim.cmd("au BufWinLeave,WinLeave <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').auto_highlight(false)")
-        vim.cmd("au CursorHold <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').auto_highlight(true)")
+        vim.cmd("au CursorHold <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').highlight(true)")
     end
 
     -- set buffer local keymaps
@@ -61,6 +61,7 @@ function M._setup_buffer(name, buf, tab)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.help, ":lua require('litee.calltree').help(true)<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.focus, ":LTFocusCalltree<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.switch, ":LTSwitchCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.next_ref, "", {silent=true, noremap=true, callback=autocmds.jumpto_next_reference})
     end
 	if config.map_resize_keys then
            lib_util_buf.map_resize_keys(panel_config.orientation, buf, opts)

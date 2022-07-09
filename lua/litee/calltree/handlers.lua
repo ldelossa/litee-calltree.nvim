@@ -28,18 +28,25 @@ local function keyify(call_hierarchy_item)
     end
 end
 
+local update_autocmd_id = nil
+
 -- ch_lsp_handler is the call heirarchy handler
 -- used in replacement to the default lsp handler.
 --
 -- this handler serves as the single entry point for creating
 -- a calltree.
 M.ch_lsp_handler = function(direction)
+    local cur_buf = vim.api.nvim_get_current_buf()
     return function(err, result, ctx, _)
         if err ~= nil then
             return
         end
         if result == nil then
             return
+        end
+
+        if update_autocmd_id ~= nil then
+            vim.api.nvim_del_autocmd(update_autocmd_id)
         end
 
         local cur_win = vim.api.nvim_get_current_win()
@@ -68,7 +75,11 @@ M.ch_lsp_handler = function(direction)
             state.direction = direction
             -- store the tab which triggered the lsp call.
             state.tab = cur_tabpage
+            -- store the invoking buffer.
+            state.invoking_buf = cur_buf
         end
+        -- swap directions so highlighting knows what's up.
+        state.direction = direction
 
         -- create the root of our call tree, the request which
         -- signaled this response is in ctx.params
@@ -133,6 +144,14 @@ M.ch_lsp_handler = function(direction)
                     end
                 end
             end)
+                -- setup an autocmd for this buffer to keep symbols update to date.
+                update_autocmd_id = vim.api.nvim_create_autocmd(
+                    {"CursorHold","TextChanged","BufEnter","BufWritePost","WinEnter"},
+                    {
+                        buffer = cur_buf,
+                        callback = M.update_calltree_extmarks
+                    }
+                )
             return
         end
         lib_tree.add_node(state.tree, root, children)
@@ -160,6 +179,15 @@ M.ch_lsp_handler = function(direction)
                 lib_panel.toggle_panel(global_state, true, false)
             end
         end
+
+        -- setup an autocmd for this buffer to keep symbols update to date.
+        update_autocmd_id = vim.api.nvim_create_autocmd(
+            {"CursorHold","TextChanged","BufEnter","BufWritePost","WinEnter"},
+            {
+                buffer = cur_buf,
+                callback = M.update_calltree_extmarks
+            }
+        )
    end
 end
 
@@ -293,6 +321,8 @@ function M.calltree_switch_handler(direction, state)
             state["calltree"].tree,
             require('litee.calltree.marshal').marshal_func
         )
+        -- swap directions so highlighting knows what's up.
+        state.direction = direction
     end
 end
 

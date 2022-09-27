@@ -36,7 +36,6 @@ local update_autocmd_id = nil
 -- this handler serves as the single entry point for creating
 -- a calltree.
 M.ch_lsp_handler = function(direction)
-    local cur_buf = vim.api.nvim_get_current_buf()
     return function(err, result, ctx, _)
         if err ~= nil then
             return
@@ -49,6 +48,7 @@ M.ch_lsp_handler = function(direction)
             vim.api.nvim_del_autocmd(update_autocmd_id)
         end
 
+        local cur_buf = vim.api.nvim_get_current_buf()
         local cur_win = vim.api.nvim_get_current_win()
         local cur_tabpage = vim.api.nvim_win_get_tabpage(cur_win)
         local state_was_nil = false
@@ -148,7 +148,7 @@ M.ch_lsp_handler = function(direction)
                 update_autocmd_id = vim.api.nvim_create_autocmd(
                     {"CursorHold","TextChanged","BufEnter","BufWritePost","WinEnter"},
                     {
-                        buffer = cur_buf,
+                        buffer = state.cur_buf,
                         callback = M.update_calltree_extmarks
                     }
                 )

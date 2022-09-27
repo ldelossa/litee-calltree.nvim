@@ -36,7 +36,9 @@ function M.details_func(state, node)
         table.insert(lines, "File: " .. file)
     end
 
-    table.insert(lines, "Detail: " .. detail)
+    if detail ~= nil then
+        table.insert(lines, "Detail: " .. detail)
+    end
 
     if references ~= nil then
         table.insert(lines, "References: " .. references)

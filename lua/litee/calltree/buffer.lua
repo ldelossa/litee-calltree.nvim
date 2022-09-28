@@ -29,18 +29,17 @@ function M._setup_buffer(name, buf, tab)
     vim.api.nvim_buf_set_option(buf, 'textwidth', 0)
     vim.api.nvim_buf_set_option(buf, 'wrapmargin', 0)
 
-    -- au to clear jump highlights on window close
-    vim.cmd("au BufWinLeave <buffer=" .. buf .. "> lua require('litee.lib.jumps').set_jump_hl(false)")
-
-    -- hide the cursor if possible since there's no need for it, resizing the panel should be used instead.
-    if config.hide_cursor then
-        vim.cmd("au WinLeave <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').hide_cursor(false)")
-        vim.cmd("au WinEnter <buffer=" .. buf .. "> lua require('litee.lib.util.buffer').hide_cursor(true)")
-    end
+    vim.api.nvim_create_autocmd({"BufWinLeave"}, {
+        buffer = buf,
+        callback = function () require('litee.lib.jumps').set_jump_hl(false) end
+    })
 
     -- au to (re)set source code highlights when a calltree node is hovered.
     if config.auto_highlight then
-        vim.cmd("au CursorMoved <buffer=" .. buf .. "> lua require('litee.calltree.autocmds').highlight(true)")
+        vim.api.nvim_create_autocmd({"CursorMoved"}, {
+            buffer = buf,
+            callback = function () require('litee.calltree.autocmds').highlight(true) end
+        })
     end
 
     -- set buffer local keymaps

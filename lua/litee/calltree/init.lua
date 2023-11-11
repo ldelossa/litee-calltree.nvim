@@ -277,24 +277,26 @@ M.jump_calltree = function(split)
         return
     end
 
+    local offset_encoding = ctx.node.offset_encoding
+
     if split == "tab" then
-        lib_jumps.jump_tab(location, ctx.node)
+        lib_jumps.jump_tab(location, ctx.node, offset_encoding)
         return
     end
 
     if split == "split" or split == "vsplit" then
-        lib_jumps.jump_split(split, location, ctx.node)
+        lib_jumps.jump_split(split, location, ctx.node, offset_encoding)
         return
     end
 
     if config.jump_mode == "neighbor" then
-        lib_jumps.jump_neighbor(location, ctx.node)
+        lib_jumps.jump_neighbor(location, ctx.node, offset_encoding)
         return
     end
 
     if config.jump_mode == "invoking" then
             local invoking_win = ctx.state["calltree"].invoking_win
-            ctx.state["calltree"].invoking_win = lib_jumps.jump_invoking(location, invoking_win, ctx.node)
+            ctx.state["calltree"].invoking_win = lib_jumps.jump_invoking(location, invoking_win, ctx.node, offset_encoding)
         return
     end
 end

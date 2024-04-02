@@ -33,6 +33,33 @@ Plug:
  Plug 'ldelossa/litee-calltree.nvim'
 ```
 
+Lazy:
+```lua
+{
+  'ldelossa/litee.nvim',
+  event = "VeryLazy",
+  opts = {
+    notify = { enabled = false },
+    panel = {
+        orientation = "bottom",
+        panel_size = 10,
+    },
+  },
+  config = function(_, opts) require('litee.lib').setup(opts) end
+},
+
+{
+  'ldelossa/litee-calltree.nvim',
+  dependencies = 'ldelossa/litee.nvim',
+  event = "VeryLazy",
+  opts = {
+    on_open = "panel",
+    map_resize_keys = false,
+  },
+  config = function(_, opts) require('litee.calltree').setup(opts) end
+},
+```
+
 ## Set it
 
 Call the setup function from anywhere you configure your plugins from.
@@ -50,6 +77,12 @@ require('litee.calltree').setup({})
 
 First ensure you also have the litee.nvim (https://github.com/ldelossa/litee.nvim) 
 library installed.
+
+Then you can create a mapping to invoke the tree like:
+```
+:lua vim.lsp.buf.incoming_calls()
+:lua vim.lsp.buf.outgoing_calls()
+```
 
 litee-calltree.nvim hooks directly into the LSP infrastructure by hijacking the necessary
 handlers like so:

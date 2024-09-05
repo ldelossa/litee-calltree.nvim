@@ -47,6 +47,7 @@ function M._setup_buffer(name, buf, tab)
     if not config.disable_keymaps then
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.expand, ":LTExpandCalltree<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.collapse, ":LTCollapseCalltree<CR>", opts)
+        vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.toggle, ":LTToggleCalltree<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.collapse_all, ":LTCollapseAllCalltree<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump, ":LTJumpCalltree<CR>", opts)
         vim.api.nvim_buf_set_keymap(buf, "n", config.keymaps.jump_split, ":LTJumpCalltreeSplit<CR>", opts)

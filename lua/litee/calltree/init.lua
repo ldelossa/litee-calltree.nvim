@@ -213,6 +213,24 @@ function M.expand_calltree()
     vim.api.nvim_win_set_cursor(ctx.state["calltree"].win, ctx.cursor)
 end
 
+function M.toggle_calltree()
+    local ctx = ui_req_ctx()
+    if
+        ctx.state == nil or
+        ctx.cursor == nil or
+        ctx.state["calltree"].tree == nil
+    then
+        lib_notify.notify_popup_with_timeout("Must perform an call hierarchy LSP request first", 1750, "error")
+        return
+    end
+
+    if not ctx.node.expanded then
+	M.expand_calltree()
+    else
+	M.collapse_calltree()
+    end
+end
+
 function M.focus_calltree()
     local ctx = ui_req_ctx()
     if

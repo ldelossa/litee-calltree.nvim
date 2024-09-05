@@ -12,6 +12,7 @@ M.config = {
     keymaps = {
       expand = "zo",
       collapse = "zc",
+      toggle = "zt",
       collapse_all = "zM",
       jump = "<CR>",
       jump_split = "s",

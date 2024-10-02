@@ -66,7 +66,7 @@ M.ch_lsp_handler = function(direction)
             state.tree = lib_tree.new_tree("calltree")
             -- snag the lsp clients from the buffer issuing the
             -- call hierarchy request
-            state.active_lsp_clients = vim.lsp.get_active_clients()
+            state.active_lsp_clients = (vim.lsp.get_clients or vim.lsp.get_active_clients)()
             -- store the window invoking the call tree, jumps will
             -- occur here.
             state.invoking_win = vim.api.nvim_get_current_win()

@@ -35,6 +35,22 @@ local update_autocmd_id = nil
 --
 -- this handler serves as the single entry point for creating
 -- a calltree.
+local function resolve_offset_encoding(ctx)
+    if ctx == nil then
+        return "utf-16"
+    end
+    if ctx.offset_encoding ~= nil then
+        return ctx.offset_encoding
+    end
+    if ctx.client_id ~= nil and vim.lsp.get_client_by_id ~= nil then
+        local client = vim.lsp.get_client_by_id(ctx.client_id)
+        if client ~= nil and client.offset_encoding ~= nil then
+            return client.offset_encoding
+        end
+    end
+    return "utf-16"
+end
+
 M.ch_lsp_handler = function(direction)
     return function(err, result, ctx, _)
         if err ~= nil then
@@ -83,6 +99,8 @@ M.ch_lsp_handler = function(direction)
 
         -- create the root of our call tree, the request which
         -- signaled this response is in ctx.params
+        local offset_encoding = resolve_offset_encoding(ctx)
+
         local root = lib_tree_node.new_node(ctx.params.item.name, keyify(ctx.params.item), 0)
         root.call_hierarchy_item = ctx.params.item
         root.location = {
@@ -90,6 +108,7 @@ M.ch_lsp_handler = function(direction)
             range = root.call_hierarchy_item.range
         }
         root.references = ctx.params.item.fromRanges
+        root.offset_encoding = offset_encoding
 
         -- create the root's children nodes via the response array.
         local children = {}
@@ -104,6 +123,7 @@ M.ch_lsp_handler = function(direction)
               range = child.call_hierarchy_item.range
           }
           child.references = call_hierarchy_call["fromRanges"]
+          child.offset_encoding = offset_encoding
           table.insert(children, child)
         end
 
@@ -205,7 +225,7 @@ end
 -- ui_state : table - a ui_state table which provides the ui state
 -- of the current tab. defined in ui.lua
 function M.calltree_expand_handler(node, linenr, direction, state)
-    return function(err, result, _, _)
+    return function(err, result, ctx, _)
         if err ~= nil then
             vim.api.nvim_err_writeln(vim.inspect(err))
             return
@@ -222,6 +242,8 @@ function M.calltree_expand_handler(node, linenr, direction, state)
             return
         end
 
+        local offset_encoding = resolve_offset_encoding(ctx)
+
         local children = {}
         for _, call_hierarchy_call in pairs(result) do
             local child = lib_tree_node.new_node(
@@ -234,6 +256,7 @@ function M.calltree_expand_handler(node, linenr, direction, state)
                 range = child.call_hierarchy_item.range
             }
             child.references = call_hierarchy_call["fromRanges"]
+            child.offset_encoding = offset_encoding
             table.insert(children, child)
         end
 
@@ -274,6 +297,7 @@ function M.calltree_switch_handler(direction, state)
         if err ~= nil or result == nil then
             return
         end
+        local offset_encoding = resolve_offset_encoding(ctx)
         -- create the root of our call tree, the request which
         -- signaled this response is in ctx.params
         local root = lib_tree_node.new_node(ctx.params.item.name, keyify(ctx.params.item), 0)
@@ -282,6 +306,7 @@ function M.calltree_switch_handler(direction, state)
             uri = root.call_hierarchy_item.uri,
             range = root.call_hierarchy_item.range
         }
+        root.offset_encoding = offset_encoding
 
         -- try to resolve the workspace symbol for root
         root.symbol = lib_lsp.symbol_from_node(state["calltree"].active_lsp_clients, root, state["calltree"].buf)
@@ -299,6 +324,7 @@ function M.calltree_switch_handler(direction, state)
                 range = child.call_hierarchy_item.range
             }
             child.references = call_hierarchy_call["fromRanges"]
+            child.offset_encoding = offset_encoding
             table.insert(children, child)
         end
 
@@ -328,19 +354,110 @@ end
 
 local ns_id = vim.api.nvim_create_namespace("calltree-extmarks")
 
+local function clamp_line(buf, line)
+    if line == nil then
+        return 0
+    end
+    local line_count = 0
+    if buf ~= nil then
+        local ok, count = pcall(vim.api.nvim_buf_line_count, buf)
+        if ok and type(count) == "number" then
+            line_count = count
+        end
+    end
+    if line_count <= 0 then
+        return math.max(line, 0)
+    end
+    if line < 0 then
+        return 0
+    end
+    if line >= line_count then
+        return line_count - 1
+    end
+    return line
+end
+
+local function clamp_col(buf, line, col)
+    if col == nil then
+        return 0
+    end
+    if col < 0 then
+        return 0
+    end
+    if buf ~= nil and line ~= nil then
+        local ok, lines = pcall(vim.api.nvim_buf_get_lines, buf, line, line + 1, true)
+        if ok and type(lines) == "table" and lines[1] ~= nil then
+            local max_col = #lines[1]
+            if col > max_col then
+                return max_col
+            end
+        end
+    end
+    return col
+end
+
+local function get_line_byte_from_position(buf, position, offset_encoding)
+    if position == nil then
+        return 0
+    end
+    local resolved_encoding = offset_encoding or "utf-16"
+    if resolved_encoding == "utf-8" or position._litee_converted then
+        return position.character
+    end
+    local ok, col = pcall(vim.lsp.util._get_line_byte_from_position, buf, position, resolved_encoding)
+    if ok and col ~= nil then
+        return col
+    end
+    return position.character
+end
+
+local function ensure_range_utf8(buf, range, offset_encoding)
+    if range == nil then
+        return 0, 0, 0, 0
+    end
+    local start_line = clamp_line(buf, range["start"].line)
+    local end_line = clamp_line(buf, range["end"].line)
+    if range._litee_converted then
+        range["start"].line = start_line
+        range["end"].line = end_line
+        range["start"].character = clamp_col(buf, start_line, range["start"].character)
+        range["end"].character = clamp_col(buf, end_line, range["end"].character)
+        return start_line, range["start"].character, end_line, range["end"].character
+    end
+    local resolved_encoding = offset_encoding or "utf-16"
+    if resolved_encoding ~= "utf-8" then
+        range["start"].line = start_line
+        range["end"].line = end_line
+        local start_col = get_line_byte_from_position(buf, range["start"], resolved_encoding)
+        local end_col = get_line_byte_from_position(buf, range["end"], resolved_encoding)
+        range["start"].character = clamp_col(buf, start_line, start_col)
+        range["end"].character = clamp_col(buf, end_line, end_col)
+    else
+        range["start"].line = start_line
+        range["end"].line = end_line
+        range["start"].character = clamp_col(buf, start_line, range["start"].character)
+        range["end"].character = clamp_col(buf, end_line, range["end"].character)
+    end
+    range._litee_converted = true
+    range["start"]._litee_converted = true
+    range["end"]._litee_converted = true
+    return start_line, range["start"].character, end_line, range["end"].character
+end
+
 local function _update_calltree_extmarks(node, buf)
     if node.extmark == nil then
         -- extmark is nil, and buffer is open, create a extmark
+        local start_line, start_col, end_line, end_col = ensure_range_utf8(buf, node.location.range, node.offset_encoding)
         node.extmark = {
             buf = buf,
             id = vim.api.nvim_buf_set_extmark(
                 buf,
                 ns_id,
-                node.location.range["start"].line,
-                node.location.range["start"].character,
+                start_line,
+                start_col,
                 {
-                    end_row = node.location.range["end"].line,
-                    end_col = node.location.range["end"].character,
+                    end_row = end_line,
+                    end_col = end_col,
                 }
             )
         }
@@ -361,6 +478,9 @@ local function _update_calltree_extmarks(node, buf)
             node.location.range["start"].character = extmark_linenr[2]
             node.location.range["end"].line = extmark_linenr[1] + relative_line_count
             node.location.range["end"].character = extmark_linenr[2] + relative_char_count
+            node.location.range._litee_converted = true
+            node.location.range["start"]._litee_converted = true
+            node.location.range["end"]._litee_converted = true
         end
     end
     if node.ref_extmarks == nil and node.references ~= nil then
@@ -368,16 +488,17 @@ local function _update_calltree_extmarks(node, buf)
         local ref_extmarks = {}
         for _, reference in ipairs(node.references) do
             -- extmark is nil, and buffer is open, create a extmark
+            local ref_start_line, ref_start_col, ref_end_line, ref_end_col = ensure_range_utf8(buf, reference, node.offset_encoding)
             local extmark = {
                 buf = buf,
                 id = vim.api.nvim_buf_set_extmark(
                     buf,
                     ns_id,
-                    reference["start"].line,
-                    reference["start"].character,
+                    ref_start_line,
+                    ref_start_col,
                     {
-                        end_row = reference["end"].line,
-                        end_col = reference["end"].character,
+                        end_row = ref_end_line,
+                        end_col = ref_end_col,
                     }
                 )
             }
@@ -398,12 +519,15 @@ local function _update_calltree_extmarks(node, buf)
                 local relative_line_count = reference["end"].line -
                     reference["start"].line
                 local relative_char_count = reference["end"].character -
-                    reference["start"].line
+                    reference["start"].character
 
                 reference["start"].line = extmark_linenr[1]
                 reference["start"].character = extmark_linenr[2]
                 reference["end"].line = extmark_linenr[1] + relative_line_count
                 reference["end"].character = extmark_linenr[2] + relative_char_count
+                reference._litee_converted = true
+                reference["start"]._litee_converted = true
+                reference["end"]._litee_converted = true
             end
         end
     end

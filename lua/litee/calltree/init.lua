@@ -468,12 +468,31 @@ function M.setup(user_config)
 
     lib_panel.register_component("calltree", pre_window_create, post_window_create)
 
-    vim.lsp.handlers['callHierarchy/incomingCalls'] = vim.lsp.with(
-                require('litee.calltree.handlers').ch_lsp_handler("from"), {}
-    )
-    vim.lsp.handlers['callHierarchy/outgoingCalls'] = vim.lsp.with(
-                require('litee.calltree.handlers').ch_lsp_handler("to"), {}
-    )
+    local incoming_handler = require('litee.calltree.handlers').ch_lsp_handler("from")
+    local outgoing_handler = require('litee.calltree.handlers').ch_lsp_handler("to")
+
+    local function attach_calltree_handlers(client)
+        if client == nil then
+            return
+        end
+
+        client.handlers = client.handlers or {}
+        client.handlers['callHierarchy/incomingCalls'] = incoming_handler
+        client.handlers['callHierarchy/outgoingCalls'] = outgoing_handler
+    end
+
+    for _, client in ipairs(vim.lsp.get_clients()) do
+        attach_calltree_handlers(client)
+    end
+
+    local augroup = vim.api.nvim_create_augroup("LiteeCalltreeLspHandlers", { clear = true })
+    vim.api.nvim_create_autocmd("LspAttach", {
+        group = augroup,
+        callback = function(args)
+            local client = vim.lsp.get_client_by_id(args.data.client_id)
+            attach_calltree_handlers(client)
+        end,
+    })
 
     require('litee.calltree.commands').setup()
 end
